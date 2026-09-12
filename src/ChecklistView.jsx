@@ -490,12 +490,14 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
         )}
       </main>
 
-      <footer className="save-bar">
-        {status && <p className={`status-message status-${status.type}`}>{status.message}</p>}
-        <button onClick={handleSave} disabled={!isAdmin || saving || players.length === 0} className="save-button">
-          {saving ? 'Salvando…' : 'Salvar presença de hoje'}
-        </button>
-      </footer>
+      {isAdmin && (
+        <footer className="save-bar">
+          {status && <p className={`status-message status-${status.type}`}>{status.message}</p>}
+          <button onClick={handleSave} disabled={saving || players.length === 0} className="save-button">
+            {saving ? 'Salvando…' : 'Salvar presença de hoje'}
+          </button>
+        </footer>
+      )}
     </>
   )
 }
