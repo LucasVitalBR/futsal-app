@@ -417,7 +417,7 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
     <>
       <header className="matchday-header">
         <div className="brand-row">
-          <Crest size={28} />
+          <Crest size={36} />
           <span className="brand-name">Futsal Kings</span>
         </div>
         <h1>{formatMatchDate(matchDate)}</h1>

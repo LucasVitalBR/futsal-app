@@ -66,6 +66,15 @@ body {
   color: var(--gold);
 }
 
+.matchday-header .brand-row {
+  justify-content: center;
+  margin-bottom: 1.1rem;
+}
+
+.matchday-header .brand-name {
+  font-size: 1.2rem;
+}
+
 .matchday-header h1 {
   font-family: 'Fraunces', serif;
   font-weight: 600;
