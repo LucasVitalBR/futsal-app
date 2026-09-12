@@ -1,14 +1,13 @@
 // Posições selecionáveis na cartinha. "skillPool" diz qual pool de
 // habilidades (ver src/lib/skills.js) essa posição puxa mais na hora do
-// sorteio de tier — hoje só existem as pools "goleiro" e "linha", mas as 4
-// posições de linha já ficam mapeadas separadamente pra UI (abreviação /
-// nome de exibição) mesmo compartilhando a mesma pool de habilidades.
+// sorteio de tier. Ala Direita e Ala Esquerda compartilham a mesma pool
+// "ala" (as habilidades de ala não distinguem lado).
 export const POSITIONS = [
   { id: 'goleiro', label: 'Goleiro', abbr: 'GL', skillPool: 'goleiro' },
-  { id: 'fixo', label: 'Fixo', abbr: 'FX', skillPool: 'linha' },
-  { id: 'ala_direita', label: 'Ala Direita', abbr: 'ALD', skillPool: 'linha' },
-  { id: 'ala_esquerda', label: 'Ala Esquerda', abbr: 'ALE', skillPool: 'linha' },
-  { id: 'pivo', label: 'Pivô', abbr: 'PV', skillPool: 'linha' },
+  { id: 'fixo', label: 'Fixo', abbr: 'FX', skillPool: 'fixo' },
+  { id: 'ala_direita', label: 'Ala Direita', abbr: 'ALD', skillPool: 'ala' },
+  { id: 'ala_esquerda', label: 'Ala Esquerda', abbr: 'ALE', skillPool: 'ala' },
+  { id: 'pivo', label: 'Pivô', abbr: 'PV', skillPool: 'pivo' },
 ]
 
 export function getPositionById(id) {
