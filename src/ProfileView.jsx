@@ -1,15 +1,76 @@
+import { useState } from 'react'
 import { supabase } from './lib/supabaseClient'
 import { computeOverall } from './lib/playerAttributes'
 import { getRarity } from './lib/rarity'
 import { getSkillById } from './lib/skills'
 import { IconCard, IconLogout, IconChevronRight } from './icons'
 
-export default function ProfileView({ player, onNavigate }) {
+const PLAYER_SELECT_COLUMNS =
+  'id, name, jersey_number, total_points, skill_points_available, attributes, is_admin, user_id, position, highest_tier_reached, unlocked_skills'
+
+export default function ProfileView({ player, players = [], onNavigate, onPlayerUpdated }) {
   const overall = computeOverall(player.attributes)
   const tier = getRarity(overall)
   const equippedSkills = (player.unlocked_skills ?? [])
     .map((unlock) => ({ skill: getSkillById(unlock.equipped), tierName: unlock.tierName }))
     .filter((entry) => entry.skill)
+
+  const [editingJersey, setEditingJersey] = useState(false)
+  const [jerseyDraft, setJerseyDraft] = useState(String(player.jersey_number ?? ''))
+  const [savingJersey, setSavingJersey] = useState(false)
+  const [jerseyError, setJerseyError] = useState(null)
+
+  function startEditingJersey() {
+    setJerseyDraft(String(player.jersey_number ?? ''))
+    setJerseyError(null)
+    setEditingJersey(true)
+  }
+
+  function cancelEditingJersey() {
+    setEditingJersey(false)
+    setJerseyError(null)
+  }
+
+  async function handleSaveJersey(event) {
+    event.preventDefault()
+    setJerseyError(null)
+
+    const trimmed = jerseyDraft.trim()
+    const nextNumber = trimmed === '' ? null : Number(trimmed)
+
+    if (trimmed !== '' && (!Number.isInteger(nextNumber) || nextNumber < 0 || nextNumber > 99)) {
+      setJerseyError('Escolha um número entre 0 e 99.')
+      return
+    }
+
+    if (nextNumber === (player.jersey_number ?? null)) {
+      setEditingJersey(false)
+      return
+    }
+
+    const takenBy = nextNumber === null ? null : players.find((p) => p.id !== player.id && p.jersey_number === nextNumber)
+    if (takenBy) {
+      setJerseyError(`O número ${nextNumber} já é do ${takenBy.name}.`)
+      return
+    }
+
+    setSavingJersey(true)
+    const { data, error } = await supabase
+      .from('players')
+      .update({ jersey_number: nextNumber })
+      .eq('id', player.id)
+      .select(PLAYER_SELECT_COLUMNS)
+      .single()
+    setSavingJersey(false)
+
+    if (error) {
+      setJerseyError(`Erro ao salvar: ${error.message}`)
+      return
+    }
+
+    onPlayerUpdated?.(data)
+    setEditingJersey(false)
+  }
 
   return (
     <div className="profile-view">
@@ -37,6 +98,35 @@ export default function ProfileView({ player, onNavigate }) {
           <span>Tier</span>
           <strong>{tier.name}</strong>
         </div>
+      </div>
+
+      <div className="profile-jersey-editor">
+        <p className="section-kicker">Número da camisa</p>
+        {editingJersey ? (
+          <form className="jersey-edit-row" onSubmit={handleSaveJersey}>
+            <input
+              type="number"
+              min="0"
+              max="99"
+              value={jerseyDraft}
+              onChange={(e) => setJerseyDraft(e.target.value)}
+              placeholder="Nº"
+              autoFocus
+              disabled={savingJersey}
+            />
+            <button type="submit" className="jersey-edit-save" disabled={savingJersey}>
+              {savingJersey ? 'Salvando…' : 'Salvar'}
+            </button>
+            <button type="button" className="jersey-edit-cancel" onClick={cancelEditingJersey} disabled={savingJersey}>
+              Cancelar
+            </button>
+          </form>
+        ) : (
+          <button type="button" className="jersey-edit-trigger" onClick={startEditingJersey}>
+            Nº {player.jersey_number ?? '-'} · Alterar
+          </button>
+        )}
+        {jerseyError && <p className="status-message status-error">{jerseyError}</p>}
       </div>
 
       {equippedSkills.length > 0 && (

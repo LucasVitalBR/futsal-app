@@ -28,6 +28,12 @@ create table if not exists players (
   created_at timestamptz not null default now()
 );
 
+-- Cada jogador escolhe o próprio número no perfil (ver trigger mais abaixo,
+-- que libera esse campo pra edição do dono da linha). Um por número, com
+-- vários jogadores sem número escolhido ainda (null) sendo permitido.
+drop index if exists players_jersey_number_unique;
+create unique index players_jersey_number_unique on players (jersey_number) where jersey_number is not null;
+
 -- Posição escolhida na cartinha. Usada só pra pesar o sorteio de habilidades
 -- desbloqueadas por tier (ver mais abaixo); não trava o jogador de tirar
 -- habilidade de fora da posição dele, só deixa menos provável.
@@ -130,9 +136,10 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 -- Trava de segurança: um jogador comum só pode alterar a PRÓPRIA linha, e
--- só pode mexer nos atributos / pontos disponíveis, respeitando a
--- quantidade de pontos que ele realmente tem pra gastar. Quem é admin
--- (você) não passa por essa trava.
+-- só pode mexer nos atributos / pontos disponíveis (respeitando a
+-- quantidade de pontos que ele realmente tem pra gastar), posição e número
+-- da camisa (esse com índice único acima, pra não repetir número). Quem é
+-- admin (você) não passa por essa trava.
 create or replace function public.enforce_player_self_update()
 returns trigger as $$
 declare
@@ -160,7 +167,6 @@ begin
 
   if new.total_points is distinct from old.total_points
      or new.name is distinct from old.name
-     or new.jersey_number is distinct from old.jersey_number
      or new.user_id is distinct from old.user_id
      or new.is_admin is distinct from old.is_admin then
     raise exception 'Esse campo só pode ser alterado por um administrador.';

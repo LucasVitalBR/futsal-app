@@ -854,6 +854,75 @@ body {
   white-space: nowrap;
 }
 
+.profile-jersey-editor {
+  margin-bottom: 1.5rem;
+}
+
+.jersey-edit-trigger {
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: white;
+  color: var(--ink);
+  font-family: 'Fraunces', serif;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.jersey-edit-trigger:hover {
+  border-color: var(--crest-red);
+  color: var(--crest-red);
+}
+
+.jersey-edit-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.jersey-edit-row input {
+  width: 4rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 0.95rem;
+}
+
+.jersey-edit-row input:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+.jersey-edit-save {
+  padding: 0.6rem 0.9rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--crest-red);
+  color: white;
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.jersey-edit-cancel {
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: white;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.jersey-edit-save:disabled,
+.jersey-edit-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.profile-jersey-editor .status-message {
+  margin: 0.5rem 0 0;
+}
+
 .profile-skills {
   margin-bottom: 1.5rem;
 }

@@ -114,7 +114,7 @@ export default function App() {
             <p className="roster-empty">Sua cartinha ainda está sendo criada, recarregue a página em instantes.</p>
           )
         ) : tab === 'perfil' && currentPlayer ? (
-          <ProfileView player={currentPlayer} onNavigate={setTab} />
+          <ProfileView player={currentPlayer} players={players} onNavigate={setTab} onPlayerUpdated={handlePlayerUpdated} />
         ) : null}
       </div>
 
