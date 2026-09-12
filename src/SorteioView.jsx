@@ -85,13 +85,13 @@ export default function SorteioView({ players }) {
         <p className="reserves-title">Reservas</p>
         <div className="reserves-columns">
           <div>
-            <strong>Time A</strong>
+            <strong>Time Laranja</strong>
             <ul className="reserves-list">
               {reserveA.map((id) => <li key={id}>{playerName(id)}</li>)}
             </ul>
           </div>
           <div>
-            <strong>Time B</strong>
+            <strong>Time Verde</strong>
             <ul className="reserves-list">
               {reserveB.map((id) => <li key={id}>{playerName(id)}</li>)}
             </ul>
@@ -164,8 +164,8 @@ export default function SorteioView({ players }) {
           {currentDraw && (
             <div className="teams-result">
               <p className="draw-result-time">Sorteado às {formatTime(currentDraw.created_at)}</p>
-              <TeamFormation label="Time A" variant="gold" ids={currentDraw.teams.A} players={players} onPlayerSelect={setSelectedPlayer} />
-              <TeamFormation label="Time B" variant="red" ids={currentDraw.teams.B} players={players} onPlayerSelect={setSelectedPlayer} />
+              <TeamFormation label="Time Laranja" variant="orange" ids={currentDraw.teams.A} players={players} onPlayerSelect={setSelectedPlayer} />
+              <TeamFormation label="Time Verde" variant="green" ids={currentDraw.teams.B} players={players} onPlayerSelect={setSelectedPlayer} />
 
               {renderReserves(currentDraw.teams)}
             </div>
@@ -190,8 +190,8 @@ export default function SorteioView({ players }) {
                 {previousDraws.map((draw) => (
                   <div className="teams-result draw-result-past" key={draw.id}>
                     <p className="draw-result-time">Sorteado às {formatTime(draw.created_at)}</p>
-                    <TeamFormation label="Time A" variant="gold" ids={draw.teams.A} players={players} onPlayerSelect={setSelectedPlayer} />
-                    <TeamFormation label="Time B" variant="red" ids={draw.teams.B} players={players} onPlayerSelect={setSelectedPlayer} />
+                    <TeamFormation label="Time Laranja" variant="orange" ids={draw.teams.A} players={players} onPlayerSelect={setSelectedPlayer} />
+                    <TeamFormation label="Time Verde" variant="green" ids={draw.teams.B} players={players} onPlayerSelect={setSelectedPlayer} />
                     {renderReserves(draw.teams)}
                   </div>
                 ))}

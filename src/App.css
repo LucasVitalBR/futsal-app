@@ -9,6 +9,8 @@
   --line: #ddd6c5;
   --good: #1c7a4a;
   --bad: #c0392b;
+  --team-orange: #d9782d;
+  --team-green: #1c7a4a;
 }
 
 * {
@@ -1560,12 +1562,12 @@ body {
   border: 1.5px solid var(--line);
 }
 
-.pitch-panel-gold {
-  border-color: var(--gold);
+.pitch-panel-orange {
+  border-color: var(--team-orange);
 }
 
-.pitch-panel-red {
-  border-color: var(--crest-red);
+.pitch-panel-green {
+  border-color: var(--team-green);
 }
 
 .pitch {
