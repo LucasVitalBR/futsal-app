@@ -11,6 +11,8 @@
   --bad: #c0392b;
   --team-orange: #d9782d;
   --team-green: #1c7a4a;
+  --court-blue: #0f5c86;
+  --court-blue-deep: #062334;
 }
 
 * {
@@ -39,8 +41,8 @@ body {
 }
 
 .matchday-header {
-  background: var(--graphite);
-  background-image: linear-gradient(160deg, var(--graphite) 0%, var(--graphite-deep) 100%);
+  background: var(--court-blue);
+  background-image: linear-gradient(160deg, var(--court-blue) 0%, var(--court-blue-deep) 100%);
   color: white;
   border-bottom: 6px solid var(--gold);
 }
