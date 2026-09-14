@@ -1,11 +1,15 @@
-import { IconChecklist, IconUsers, IconCard, IconUser, IconShuffle } from './icons'
+import iconChamada from './assets/nav-chamada.png'
+import iconElenco from './assets/nav-elenco.png'
+import iconEscalacoes from './assets/nav-escalacoes.png'
+import iconCartinha from './assets/nav-cartinha.png'
+import iconPerfil from './assets/nav-perfil.png'
 
 const TABS = [
-  { key: 'chamada', label: 'Chamada', Icon: IconChecklist, requiresAuth: false },
-  { key: 'elenco', label: 'Elenco', Icon: IconUsers, requiresAuth: false },
-  { key: 'sorteio', label: 'Escalações', Icon: IconShuffle, requiresAuth: false },
-  { key: 'cartinha', label: 'Cartinha', Icon: IconCard, requiresAuth: true },
-  { key: 'perfil', label: 'Perfil', Icon: IconUser, requiresAuth: true },
+  { key: 'chamada', label: 'Chamada', icon: iconChamada, requiresAuth: false },
+  { key: 'elenco', label: 'Elenco', icon: iconElenco, requiresAuth: false },
+  { key: 'sorteio', label: 'Escalações', icon: iconEscalacoes, requiresAuth: false },
+  { key: 'cartinha', label: 'Cartinha', icon: iconCartinha, requiresAuth: true },
+  { key: 'perfil', label: 'Perfil', icon: iconPerfil, requiresAuth: true },
 ]
 
 export default function BottomNav({ tab, setTab, isSupabaseConfigured }) {
@@ -13,13 +17,13 @@ export default function BottomNav({ tab, setTab, isSupabaseConfigured }) {
 
   return (
     <nav className="bottom-nav">
-      {visibleTabs.map(({ key, label, Icon }) => (
+      {visibleTabs.map(({ key, label, icon }) => (
         <button
           key={key}
           className={`bottom-nav-item ${tab === key ? 'is-active' : ''}`}
           onClick={() => setTab(key)}
         >
-          <Icon size={22} />
+          <img className="bottom-nav-icon" src={icon} alt="" aria-hidden="true" />
           <span>{label}</span>
         </button>
       ))}

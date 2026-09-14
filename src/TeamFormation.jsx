@@ -1,5 +1,6 @@
 import PlayerShieldCard from './PlayerShieldCard'
 import { computeOverall } from './lib/playerAttributes'
+import { IconShirt } from './icons'
 
 // Linhas de baixo (defesa) pra cima (ataque), por tamanho de time.
 // Como não guardamos a posição de cada jogador, isso é só uma organização
@@ -32,7 +33,10 @@ export default function TeamFormation({ label, variant, ids, players, onPlayerSe
   return (
     <div className={`pitch-panel pitch-panel-${variant}`}>
       <div className="team-panel-header">
-        <span className="team-panel-title">{label}</span>
+        <span className="team-panel-title">
+          <IconShirt size={16} className="team-panel-shirt" />
+          {label}
+        </span>
         <span className="team-panel-ovr">OVR médio {averageOverall(ids, players)}</span>
       </div>
 

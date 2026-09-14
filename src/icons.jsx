@@ -70,6 +70,14 @@ export function IconChevronRight({ size = 18 }) {
   )
 }
 
+export function IconChevronLeft({ size = 18 }) {
+  return (
+    <svg width={size} height={size} {...base()}>
+      <path d="M15 5l-7 7 7 7" />
+    </svg>
+  )
+}
+
 export function IconShuffle({ size = 22 }) {
   return (
     <svg width={size} height={size} {...base()}>
@@ -86,6 +94,57 @@ export function IconTrash({ size = 18 }) {
   return (
     <svg width={size} height={size} {...base()}>
       <path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" />
+    </svg>
+  )
+}
+
+export function IconCalendar({ size = 22 }) {
+  return (
+    <svg width={size} height={size} {...base()}>
+      <rect x="3.5" y="5" width="17" height="15" rx="3" />
+      <path d="M3.5 10h17" />
+      <path d="M8 3v3.5M16 3v3.5" />
+      <path d="M8 14.2l2 1.8 4.5-4.5" strokeWidth="1.6" />
+    </svg>
+  )
+}
+
+export function IconAlertCircle({ size = 20 }) {
+  return (
+    <svg width={size} height={size} {...base()}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 8v5" />
+      <circle cx="12" cy="16" r="0.6" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+export function IconShieldAlert({ size = 20 }) {
+  return (
+    <svg width={size} height={size} {...base()}>
+      <path d="M12 3l7 3v5.5c0 4.5-3 7.7-7 9.5-4-1.8-7-5-7-9.5V6z" />
+      <path d="M12 8.5v4" />
+      <circle cx="12" cy="15.2" r="0.6" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+export function IconClock({ size = 16 }) {
+  return (
+    <svg width={size} height={size} {...base()}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
+    </svg>
+  )
+}
+
+export function IconShirt({ size = 18, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path
+        d="M8 3.2L2.5 6.6 4.7 10.6 7 9.2V21h10V9.2l2.3 1.4 2.2-4-5.5-3.4c-.6.9-1.6 1.5-3 1.5s-2.4-.6-3-1.5z"
+        fill="currentColor"
+      />
     </svg>
   )
 }

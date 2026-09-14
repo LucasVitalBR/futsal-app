@@ -119,13 +119,38 @@ create table if not exists team_draws (
 );
 
 -- Quando alguém cria uma conta (login), isso cria automaticamente a
--- cartinha de jogador dela, já vinculada. O nome vem do que a pessoa digitou
--- na tela de cadastro.
+-- cartinha de jogador dela, já vinculada. O nome (e, se a pessoa escolheu,
+-- o número da camisa) vem do que ela digitou na tela de cadastro.
 create or replace function public.handle_new_user()
 returns trigger as $$
+declare
+  requested_jersey int;
 begin
-  insert into public.players (user_id, name)
-  values (new.id, coalesce(new.raw_user_meta_data ->> 'full_name', 'Novo jogador'));
+  begin
+    requested_jersey := nullif(new.raw_user_meta_data ->> 'jersey_number', '')::int;
+  exception when others then
+    requested_jersey := null;
+  end;
+
+  if requested_jersey is not null and (requested_jersey < 0 or requested_jersey > 99) then
+    requested_jersey := null;
+  end if;
+
+  begin
+    insert into public.players (user_id, name, jersey_number)
+    values (
+      new.id,
+      coalesce(new.raw_user_meta_data ->> 'full_name', 'Novo jogador'),
+      requested_jersey
+    );
+  exception when unique_violation then
+    -- Alguém ficou com esse número entre a checagem no app e o cadastro de
+    -- verdade (corrida rara). Não deixa isso quebrar a criação da conta —
+    -- cria sem número, e a pessoa escolhe outro depois no perfil.
+    insert into public.players (user_id, name, jersey_number)
+    values (new.id, coalesce(new.raw_user_meta_data ->> 'full_name', 'Novo jogador'), null);
+  end;
+
   return new;
 end;
 $$ language plpgsql security definer set search_path = public;

@@ -3,6 +3,8 @@ import { supabase, isSupabaseConfigured } from './lib/supabaseClient'
 import { computeOverall } from './lib/playerAttributes'
 import { getRarity } from './lib/rarity'
 import { getAttendanceBalance, getAttendanceTier } from './lib/attendanceTier'
+import Hero from './Hero'
+import { IconUsers } from './icons'
 
 export default function PlayersView({ players, setPlayers, isAdmin }) {
   const [name, setName] = useState('')
@@ -110,8 +112,22 @@ export default function PlayersView({ players, setPlayers, isAdmin }) {
   )
 
   return (
-    <div className="players-view">
-      {isAdmin ? (
+    <>
+      <Hero />
+      <div className="players-view">
+        <div className="section-header-row">
+          <div className="section-header-left">
+            <span className="section-icon">
+              <IconUsers size={22} />
+            </span>
+            <div>
+              <h2 className="section-title">Elenco</h2>
+              <p className="section-subtitle">{players.length} jogadores cadastrados</p>
+            </div>
+          </div>
+        </div>
+
+        {isAdmin ? (
         <form className="player-form" onSubmit={handleAddPlayer}>
           <div className="form-row">
             <label htmlFor="player-name">Nome</label>
@@ -183,6 +199,7 @@ export default function PlayersView({ players, setPlayers, isAdmin }) {
         })}
         {players.length === 0 && <p className="roster-empty">Nenhum jogador cadastrado ainda.</p>}
       </ul>
-    </div>
+      </div>
+    </>
   )
 }

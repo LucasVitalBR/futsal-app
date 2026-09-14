@@ -109,7 +109,7 @@ export default function App() {
           <SorteioView players={players} />
         ) : tab === 'cartinha' ? (
           currentPlayer ? (
-            <PlayerCardView player={currentPlayer} onPlayerUpdated={handlePlayerUpdated} />
+            <PlayerCardView player={currentPlayer} onPlayerUpdated={handlePlayerUpdated} onBack={() => setTab('perfil')} />
           ) : (
             <p className="roster-empty">Sua cartinha ainda está sendo criada, recarregue a página em instantes.</p>
           )

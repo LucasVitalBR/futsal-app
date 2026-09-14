@@ -3,8 +3,9 @@ import { supabase } from './lib/supabaseClient'
 import { todayISODate, formatTime } from './lib/matchDate'
 import { MIN_TEAM_SIZE } from './lib/teamDraw'
 import TeamFormation from './TeamFormation'
-import { IconShuffle, IconTrash } from './icons'
+import { IconShuffle, IconTrash, IconClock } from './icons'
 import PlayerPreviewView from './PlayerPreviewView'
+import Hero from './Hero'
 
 const DEFAULT_TEAM_SIZE = 5
 
@@ -128,11 +129,30 @@ export default function SorteioView({ players }) {
   }
 
   return (
-    <div className="sorteio-view">
-      <div className="brand-row">
-        <IconShuffle size={26} />
-        <span className="brand-name">Escalações de hoje</span>
-      </div>
+    <>
+      <Hero />
+      <div className="sorteio-view">
+        <div className="section-header-row">
+          <div className="section-header-left">
+            <span className="section-icon">
+              <IconShuffle size={22} />
+            </span>
+            <div>
+              <h2 className="section-title">Escalações de hoje</h2>
+              {matchId && !loading && !selectedPlayer && (
+                <p className="section-subtitle">
+                  {confirmedIds.length} confirmados hoje · {drawPlayerCount} entram no sorteio
+                  {reserveCount > 0 && ` · ${reserveCount} na reserva`}
+                </p>
+              )}
+            </div>
+          </div>
+          {currentDraw && !selectedPlayer && (
+            <span className="section-time">
+              <IconClock size={15} /> Sorteado às {formatTime(currentDraw.created_at)}
+            </span>
+          )}
+        </div>
 
       {loading ? (
         <p className="roster-empty">Carregando…</p>
@@ -144,11 +164,6 @@ export default function SorteioView({ players }) {
         </p>
       ) : (
         <>
-          <p className="confirmed-count">
-            {confirmedIds.length} confirmados hoje · {drawPlayerCount} entram no sorteio
-            {reserveCount > 0 && ` · ${reserveCount} na reserva`}
-          </p>
-
           {status && <p className={`status-message status-${status.type}`}>{status.message}</p>}
 
           {!canDraw && confirmedIds.length < MIN_TEAM_SIZE * 2 && (
@@ -163,7 +178,6 @@ export default function SorteioView({ players }) {
 
           {currentDraw && (
             <div className="teams-result">
-              <p className="draw-result-time">Sorteado às {formatTime(currentDraw.created_at)}</p>
               <TeamFormation label="Time Laranja" variant="orange" ids={currentDraw.teams.A} players={players} onPlayerSelect={setSelectedPlayer} />
               <TeamFormation label="Time Verde" variant="green" ids={currentDraw.teams.B} players={players} onPlayerSelect={setSelectedPlayer} />
 
@@ -200,6 +214,7 @@ export default function SorteioView({ players }) {
           )}
         </>
       )}
-    </div>
+      </div>
+    </>
   )
 }

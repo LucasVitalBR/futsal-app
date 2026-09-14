@@ -1,6 +1,7 @@
 import PlayerShieldCard from './PlayerShieldCard'
 import { ATTRIBUTE_LABELS, ATTRIBUTE_ORDER } from './lib/playerAttributes'
 import { getSkillById } from './lib/skills'
+import { IconChevronLeft } from './icons'
 
 export default function PlayerPreviewView({ player, onBack }) {
   const equippedSkills = (player.unlocked_skills ?? [])
@@ -10,6 +11,7 @@ export default function PlayerPreviewView({ player, onBack }) {
   return (
     <div className="player-preview-view">
       <button type="button" className="preview-back-button" onClick={onBack}>
+        <IconChevronLeft size={18} />
         Voltar aos times
       </button>
 

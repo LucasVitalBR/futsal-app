@@ -19,15 +19,22 @@ export default function Crest({ size = 40, className = '' }) {
       />
       <text
         x="32"
-        y="53"
+        y="49"
         textAnchor="middle"
         fontFamily="Fraunces, serif"
         fontWeight="600"
-        fontSize="21"
+        fontSize="19"
         fill="currentColor"
       >
         FK
       </text>
+      <circle cx="32" cy="63" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M32 57.5l2.6 1.9-1 3-3.2 0-1-3zM27.5 61.3l1.4 3M36.5 61.3l-1.4 3M29.9 66.4h4.2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1"
+      />
     </svg>
   )
 }

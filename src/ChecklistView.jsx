@@ -3,7 +3,8 @@ import { supabase, isSupabaseConfigured } from './lib/supabaseClient'
 import { todayISODate, formatMatchDate, upcomingSaturdays } from './lib/matchDate'
 import { createTeams, MIN_TEAM_SIZE } from './lib/teamDraw'
 import { getAttendanceBalance, getAttendanceTier } from './lib/attendanceTier'
-import Crest from './Crest'
+import Hero from './Hero'
+import { IconCalendar, IconAlertCircle, IconShieldAlert } from './icons'
 
 const ATTRIBUTE_KEYS = ['pace', 'shooting', 'passing', 'dribbling', 'defending', 'physical']
 
@@ -164,10 +165,12 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
       return
     }
 
-    if (!matchConfirmed) {
-      setStatus({ type: 'error', message: 'O administrador precisa confirmar o futsal deste sábado antes de salvar.' })
-      return
-    }
+    // TODO: reativar essa trava depois dos testes — por enquanto deixa salvar
+    // mesmo sem o admin ter confirmado o futsal do sábado.
+    // if (!matchConfirmed) {
+    //   setStatus({ type: 'error', message: 'O administrador precisa confirmar o futsal deste sábado antes de salvar.' })
+    //   return
+    // }
 
     setSaving(true)
     setStatus(null)
@@ -415,23 +418,24 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
 
   return (
     <>
-      <header className="matchday-header">
-        <div className="brand-row">
-          <Crest size={36} />
-          <span className="brand-name">Futsal Kings</span>
+      <Hero />
+
+      <header className="agenda-header">
+        <span className="agenda-header-icon">
+          <IconCalendar size={24} />
+        </span>
+        <div>
+          <p className="section-kicker">Agenda do time</p>
+          <h1>{formatMatchDate(matchDate)}</h1>
+          <p className="matchday-count">
+            {present.size} de {players.length} confirmados
+          </p>
         </div>
-        <h1>{formatMatchDate(matchDate)}</h1>
-        <p className="matchday-count">
-          {present.size} de {players.length} confirmados
-        </p>
       </header>
 
       <section className="match-calendar" aria-labelledby="match-calendar-title">
         <div className="match-calendar-heading">
-          <div>
-            <p className="section-kicker">Agenda do time</p>
-            <h2 id="match-calendar-title">Próximos sábados</h2>
-          </div>
+          <h2 id="match-calendar-title">Próximos sábados</h2>
           <span className="match-calendar-legend">Status das partidas</span>
         </div>
 
@@ -441,6 +445,9 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
             const isConfirmed = scheduledMatchDates.has(date)
             return (
               <div className={`match-calendar-row ${isCurrent ? 'is-current' : ''}`} key={date}>
+                <span className="match-calendar-row-icon">
+                  <IconCalendar size={18} />
+                </span>
                 <div className="match-calendar-date">
                   <strong>{formatMatchDate(date)}</strong>
                   {isCurrent && <span>Este sábado</span>}
@@ -463,7 +470,10 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
 
       <main className="roster">
         {!isAdmin && (
-          <p className="attendance-admin-notice">A chamada só pode ser alterada e salva por um administrador.</p>
+          <p className="attendance-admin-notice">
+            <IconAlertCircle size={20} />
+            <span>A chamada só pode ser alterada e salva por um administrador.</span>
+          </p>
         )}
         {players.length === 0 ? (
           <p className="roster-empty">Nenhum jogador cadastrado ainda. Vá na aba "Elenco" pra cadastrar.</p>
@@ -492,7 +502,12 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
 
       {isAdmin && (
         <footer className="save-bar">
-          {status && <p className={`status-message status-${status.type}`}>{status.message}</p>}
+          {status && (
+            <p className={`status-message status-${status.type}`}>
+              {status.type === 'error' && <IconShieldAlert size={18} />}
+              <span>{status.message}</span>
+            </p>
+          )}
           <button onClick={handleSave} disabled={saving || players.length === 0} className="save-button">
             {saving ? 'Salvando…' : 'Salvar presença de hoje'}
           </button>

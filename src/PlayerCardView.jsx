@@ -5,11 +5,12 @@ import { ATTRIBUTE_LABELS, ATTRIBUTE_ORDER, computeOverall } from './lib/playerA
 import { getTierIndex, getTierByIndex } from './lib/rarity'
 import { drawSkillOptions } from './lib/skills'
 import { POSITIONS } from './lib/positions'
+import { IconCard, IconChevronLeft } from './icons'
 
 const PLAYER_SELECT_COLUMNS =
   'id, name, jersey_number, total_points, skill_points_available, attributes, is_admin, user_id, position, highest_tier_reached, unlocked_skills'
 
-export default function PlayerCardView({ player, onPlayerUpdated }) {
+export default function PlayerCardView({ player, onPlayerUpdated, onBack }) {
   const [draftAttributes, setDraftAttributes] = useState(() => ({ ...player.attributes }))
   const [draftPoints, setDraftPoints] = useState(player.skill_points_available)
   const [draftPosition, setDraftPosition] = useState(player.position ?? null)
@@ -114,6 +115,16 @@ export default function PlayerCardView({ player, onPlayerUpdated }) {
 
   return (
     <div className="card-view">
+      <div className="card-view-topbar">
+        {onBack && (
+          <button type="button" className="card-back-button" onClick={onBack} aria-label="Voltar ao perfil">
+            <IconChevronLeft size={20} />
+          </button>
+        )}
+        <IconCard size={18} />
+        <span>Cartinha</span>
+      </div>
+
       <PlayerShieldCard
         name={player.name}
         jerseyNumber={player.jersey_number}
