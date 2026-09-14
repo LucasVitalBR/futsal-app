@@ -43,7 +43,7 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
   const [hasRoundPointsColumn, setHasRoundPointsColumn] = useState(true)
   const [matchConfirmed, setMatchConfirmed] = useState(false)
   const matchDate = todayISODate()
-  const saturdayDates = upcomingSaturdays(2)
+  const saturdayDates = upcomingSaturdays(1)
 
   useEffect(() => {
     async function loadSchedule() {
@@ -457,8 +457,8 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
 
       <section className="match-calendar" aria-labelledby="match-calendar-title">
         <div className="match-calendar-heading">
-          <h2 id="match-calendar-title">Próximos sábados</h2>
-          <span className="match-calendar-legend">Status das partidas</span>
+          <h2 id="match-calendar-title">Próximo sábado</h2>
+          <span className="match-calendar-legend">Status da partida</span>
         </div>
 
         <div className="match-calendar-list">

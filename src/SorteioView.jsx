@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './lib/supabaseClient'
-import { todayISODate, formatTime } from './lib/matchDate'
+import { formatMatchDate, formatTime } from './lib/matchDate'
 import { MIN_TEAM_SIZE } from './lib/teamDraw'
 import TeamFormation from './TeamFormation'
 import { IconShuffle, IconTrash, IconClock } from './icons'
@@ -12,47 +12,56 @@ const DEFAULT_TEAM_SIZE = 5
 export default function SorteioView({ players }) {
   const [confirmedIds, setConfirmedIds] = useState([])
   const [matchId, setMatchId] = useState(null)
+  const [matchDate, setMatchDate] = useState(null)
   const [draws, setDraws] = useState([])
   const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState(null)
   const [selectedPlayer, setSelectedPlayer] = useState(null)
-  const matchDate = todayISODate()
 
+  // Não olha pra "hoje": pega sempre o sorteio mais recente que já
+  // aconteceu (de qualquer sábado) e mantém ele fixo na tela a semana
+  // inteira, até rolar um sorteio novo.
   useEffect(() => {
     async function load() {
       setLoading(true)
 
-      const { data: match, error: matchError } = await supabase
-        .from('matches')
-        .select('id')
-        .eq('match_date', matchDate)
+      const { data: latestDraw, error: latestDrawError } = await supabase
+        .from('team_draws')
+        .select('match_id')
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle()
 
-      if (matchError) {
-        setStatus({ type: 'error', message: `Erro ao carregar: ${matchError.message}` })
+      if (latestDrawError) {
+        setStatus({ type: 'error', message: `Erro ao carregar: ${latestDrawError.message}` })
         setLoading(false)
         return
       }
 
-      if (!match) {
+      if (!latestDraw) {
         setMatchId(null)
+        setMatchDate(null)
         setConfirmedIds([])
         setDraws([])
         setLoading(false)
         return
       }
 
-      setMatchId(match.id)
+      const currentMatchId = latestDraw.match_id
+      setMatchId(currentMatchId)
 
-      const [{ data: attendances, error: attendanceError }, { data: drawRows, error: drawError }] =
+      const [{ data: match }, { data: attendances, error: attendanceError }, { data: drawRows, error: drawError }] =
         await Promise.all([
-          supabase.from('attendances').select('player_id').eq('match_id', match.id).eq('present', true),
+          supabase.from('matches').select('match_date').eq('id', currentMatchId).maybeSingle(),
+          supabase.from('attendances').select('player_id').eq('match_id', currentMatchId).eq('present', true),
           supabase
             .from('team_draws')
             .select('id, teams, created_at')
-            .eq('match_id', match.id)
+            .eq('match_id', currentMatchId)
             .order('created_at', { ascending: false }),
         ])
+
+      setMatchDate(match?.match_date ?? null)
 
       if (attendanceError) {
         setStatus({ type: 'error', message: `Erro ao carregar presenças: ${attendanceError.message}` })
@@ -70,7 +79,7 @@ export default function SorteioView({ players }) {
     }
 
     load()
-  }, [matchDate])
+  }, [])
 
   function playerName(id) {
     return players.find((p) => p.id === id)?.name ?? '—'
@@ -102,7 +111,6 @@ export default function SorteioView({ players }) {
     )
   }
 
-  const canDraw = confirmedIds.length >= MIN_TEAM_SIZE * 2 && matchId
   const playersPerTeam = Math.min(DEFAULT_TEAM_SIZE, Math.floor(confirmedIds.length / 2))
   const drawPlayerCount = playersPerTeam * 2
   const reserveCount = Math.max(0, confirmedIds.length - drawPlayerCount)
@@ -111,7 +119,7 @@ export default function SorteioView({ players }) {
 
   async function handleDeleteHistory() {
     if (previousDraws.length === 0) return
-    if (!window.confirm('Apagar o histórico de sorteios anteriores de hoje?')) return
+    if (!window.confirm('Apagar o histórico de sorteios anteriores desse dia?')) return
 
     setStatus(null)
     const { error } = await supabase
@@ -138,10 +146,11 @@ export default function SorteioView({ players }) {
               <IconShuffle size={22} />
             </span>
             <div>
-              <h2 className="section-title">Escalações de hoje</h2>
+              <h2 className="section-title">Escalações</h2>
               {matchId && !loading && !selectedPlayer && (
                 <p className="section-subtitle">
-                  {confirmedIds.length} confirmados hoje · {drawPlayerCount} entram no sorteio
+                  {matchDate && `${formatMatchDate(matchDate)} · `}
+                  {confirmedIds.length} confirmados · {drawPlayerCount} no sorteio
                   {reserveCount > 0 && ` · ${reserveCount} na reserva`}
                 </p>
               )}
@@ -160,21 +169,12 @@ export default function SorteioView({ players }) {
         <PlayerPreviewView player={selectedPlayer} onBack={() => setSelectedPlayer(null)} />
       ) : !matchId ? (
         <p className="roster-empty">
-          Ninguém confirmou presença hoje ainda. Marque a chamada na aba "Chamada" primeiro.
+          Nenhum sorteio foi feito ainda. Confirme presença de pelo menos {MIN_TEAM_SIZE * 2} jogadores na
+          aba "Chamada" num sábado pra ver as escalações aqui.
         </p>
       ) : (
         <>
           {status && <p className={`status-message status-${status.type}`}>{status.message}</p>}
-
-          {!canDraw && confirmedIds.length < MIN_TEAM_SIZE * 2 && (
-            <p className="roster-empty">
-              Precisa de pelo menos {MIN_TEAM_SIZE * 2} confirmados para sortear automaticamente.
-            </p>
-          )}
-
-          {!currentDraw && confirmedIds.length >= MIN_TEAM_SIZE * 2 && (
-            <p className="roster-empty">O sorteio será criado ao salvar a chamada.</p>
-          )}
 
           {currentDraw && (
             <div className="teams-result">
@@ -188,7 +188,7 @@ export default function SorteioView({ players }) {
           {previousDraws.length > 0 && (
             <div className="draw-history">
               <div className="draw-history-header">
-                <span className="draw-history-title">Sorteios anteriores de hoje ({previousDraws.length})</span>
+                <span className="draw-history-title">Sorteios anteriores desse dia ({previousDraws.length})</span>
                 <button
                   type="button"
                   className="delete-history-button"
