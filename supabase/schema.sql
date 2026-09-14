@@ -94,6 +94,10 @@ create table if not exists matches (
 
 alter table matches add column if not exists game_confirmed boolean not null default false;
 
+-- Horário em que o futsal vai acontecer nesse dia. Só o admin define (mesma
+-- policy de "Admin gerencia partidas" abaixo); os outros jogadores só veem.
+alter table matches add column if not exists match_time time;
+
 -- Presença de cada jogador em cada partida
 create table if not exists attendances (
   id uuid primary key default gen_random_uuid(),

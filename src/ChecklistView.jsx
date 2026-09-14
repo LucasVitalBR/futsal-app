@@ -4,7 +4,7 @@ import { todayISODate, formatMatchDate, upcomingSaturdays } from './lib/matchDat
 import { createTeams, MIN_TEAM_SIZE } from './lib/teamDraw'
 import { getAttendanceBalance, getAttendanceTier } from './lib/attendanceTier'
 import Hero from './Hero'
-import { IconCalendar, IconAlertCircle, IconShieldAlert } from './icons'
+import { IconCalendar, IconAlertCircle, IconShieldAlert, IconClock } from './icons'
 
 const ATTRIBUTE_KEYS = ['pace', 'shooting', 'passing', 'dribbling', 'defending', 'physical']
 
@@ -34,7 +34,9 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
   const [present, setPresent] = useState(() => new Set())
   const [saving, setSaving] = useState(false)
   const [status, setStatus] = useState(null)
-  const [scheduledMatchDates, setScheduledMatchDates] = useState(() => new Set())
+  // Um registro por data de sábado: { confirmed, time }. "time" vem do
+  // banco como "HH:MM:SS" (ou null se ainda não foi definido).
+  const [scheduleInfo, setScheduleInfo] = useState({})
   const [scheduleLoading, setScheduleLoading] = useState(true)
   const [attendanceStats, setAttendanceStats] = useState({})
   const [roundPoints, setRoundPoints] = useState({})
@@ -52,13 +54,16 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
 
       const { data, error } = await supabase
         .from('matches')
-        .select('match_date, game_confirmed')
+        .select('match_date, game_confirmed, match_time')
         .gte('match_date', saturdayDates[0])
         .lte('match_date', saturdayDates[saturdayDates.length - 1])
 
       if (!error) {
-        setScheduledMatchDates(
-          new Set(data.filter((match) => match.game_confirmed).map((match) => match.match_date)),
+        setScheduleInfo(
+          data.reduce((result, match) => {
+            result[match.match_date] = { confirmed: match.game_confirmed, time: match.match_time }
+            return result
+          }, {}),
         )
       }
       setScheduleLoading(false)
@@ -390,18 +395,35 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
       return
     }
     if (date === matchDate) setMatchConfirmed(nextConfirmed)
-    setScheduledMatchDates((previous) => {
-      const next = new Set(previous)
-      if (nextConfirmed) next.add(date)
-      else next.delete(date)
-      return next
-    })
+    setScheduleInfo((previous) => ({
+      ...previous,
+      [date]: { ...previous[date], confirmed: nextConfirmed },
+    }))
     setStatus({
       type: 'success',
       message: nextConfirmed
         ? `Futsal confirmado para ${formatMatchDate(date)}.`
         : `Futsal cancelado para ${formatMatchDate(date)}.`,
     })
+  }
+
+  async function handleTimeChange(date, value) {
+    if (!isAdmin) return
+    const nextTime = value === '' ? null : value
+
+    // Atualização otimista, pra não travar o input enquanto salva.
+    setScheduleInfo((previous) => ({
+      ...previous,
+      [date]: { ...previous[date], time: nextTime },
+    }))
+
+    const { error } = await supabase
+      .from('matches')
+      .upsert({ match_date: date, match_time: nextTime }, { onConflict: 'match_date' })
+
+    if (error) {
+      setStatus({ type: 'error', message: `Erro ao salvar horário: ${error.message}` })
+    }
   }
 
   const orderedPlayers = [...players].sort((first, second) => {
@@ -442,7 +464,8 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
         <div className="match-calendar-list">
           {saturdayDates.map((date, index) => {
             const isCurrent = index === 0
-            const isConfirmed = scheduledMatchDates.has(date)
+            const isConfirmed = scheduleInfo[date]?.confirmed ?? false
+            const time = scheduleInfo[date]?.time ?? ''
             return (
               <div className={`match-calendar-row ${isCurrent ? 'is-current' : ''}`} key={date}>
                 <span className="match-calendar-row-icon">
@@ -451,6 +474,23 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
                 <div className="match-calendar-date">
                   <strong>{formatMatchDate(date)}</strong>
                   {isCurrent && <span>Este sábado</span>}
+                  {isAdmin ? (
+                    <label className="match-time-field">
+                      <IconClock size={13} />
+                      <input
+                        type="time"
+                        className="match-time-input"
+                        value={time.slice(0, 5)}
+                        onChange={(e) => handleTimeChange(date, e.target.value)}
+                        disabled={scheduleLoading}
+                        aria-label={`Horário do futsal de ${formatMatchDate(date)}`}
+                      />
+                    </label>
+                  ) : time ? (
+                    <span className="match-time-display">
+                      <IconClock size={13} /> {time.slice(0, 5)}
+                    </span>
+                  ) : null}
                 </div>
                 <button
                   type="button"

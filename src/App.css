@@ -341,6 +341,38 @@ body {
   font-weight: 600;
 }
 
+.match-time-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.15rem;
+  color: var(--ink-soft) !important;
+}
+
+.match-time-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+  color: var(--ink-soft);
+}
+
+.match-time-input {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg-deep);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 0.78rem;
+  padding: 0.2rem 0.4rem;
+  color-scheme: dark;
+}
+
+.match-time-input:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
 .match-status-toggle {
   position: relative;
   flex-shrink: 0;
