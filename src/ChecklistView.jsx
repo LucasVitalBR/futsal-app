@@ -52,16 +52,33 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
         return
       }
 
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('matches')
         .select('match_date, game_confirmed, match_time')
         .gte('match_date', saturdayDates[0])
         .lte('match_date', saturdayDates[saturdayDates.length - 1])
 
+      // Se a coluna match_time ainda não existir nesse banco (falta rodar a
+      // atualização do supabase/schema.sql), não deixa isso quebrar a
+      // confirmação do sábado — recarrega sem ela.
+      if (error?.message?.includes('match_time')) {
+        setStatus({
+          type: 'error',
+          message: 'O horário do futsal ainda não foi ativado no banco. Rode a atualização do schema.sql no Supabase (veja o README).',
+        })
+        const fallback = await supabase
+          .from('matches')
+          .select('match_date, game_confirmed')
+          .gte('match_date', saturdayDates[0])
+          .lte('match_date', saturdayDates[saturdayDates.length - 1])
+        data = fallback.data
+        error = fallback.error
+      }
+
       if (!error) {
         setScheduleInfo(
           data.reduce((result, match) => {
-            result[match.match_date] = { confirmed: match.game_confirmed, time: match.match_time }
+            result[match.match_date] = { confirmed: match.game_confirmed, time: match.match_time ?? null }
             return result
           }, {}),
         )
@@ -422,7 +439,12 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
       .upsert({ match_date: date, match_time: nextTime }, { onConflict: 'match_date' })
 
     if (error) {
-      setStatus({ type: 'error', message: `Erro ao salvar horário: ${error.message}` })
+      setStatus({
+        type: 'error',
+        message: error.message.includes('match_time')
+          ? 'O horário do futsal ainda não foi ativado no banco. Rode a atualização do schema.sql no Supabase (veja o README).'
+          : `Erro ao salvar horário: ${error.message}`,
+      })
     }
   }
 
