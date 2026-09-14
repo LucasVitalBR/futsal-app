@@ -91,6 +91,8 @@ body {
 /* ---------- Hero: banner "Futsal Kings" reaproveitado no topo das telas ---------- */
 
 .hero-banner {
+  container-type: inline-size;
+  container-name: hero;
   position: relative;
   display: flex;
   align-items: center;
@@ -136,20 +138,18 @@ body {
   z-index: 1;
   flex-shrink: 0;
   display: block;
-  height: 8.5rem;
-  width: auto;
+  width: 8.5rem;
+  height: auto;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
 }
 
 .hero-center-logo {
   position: relative;
   z-index: 1;
-  flex-shrink: 1;
-  min-width: 0;
+  flex-shrink: 0;
   display: block;
   width: 15.5rem;
   height: auto;
-  max-width: 62%;
   object-fit: contain;
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
 }
@@ -160,9 +160,35 @@ body {
   flex-shrink: 0;
   display: block;
   width: 4.8rem;
-  height: 4.8rem;
+  height: auto;
   object-fit: contain;
   filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.45));
+}
+
+/* Prioridade de encolhimento quando o conteúdo do banner (já sem o
+   padding lateral) não cabe no tamanho ideal de todo mundo junto
+   (brasão 8.5rem + logo central 15.5rem + bola 4.8rem ≈ 30.3rem):
+   1º a bola cede sozinha, depois o brasão (com a bola já reduzida),
+   e só por último — quando os dois já estão no menor tamanho e ainda
+   não coube — o logo central cede também. Cada etapa mexe num
+   elemento diferente, então uma não atropela a outra. */
+@container hero (max-width: 30rem) {
+  .hero-ball {
+    width: 2rem;
+  }
+}
+
+@container hero (max-width: 26rem) {
+  .hero-logo {
+    width: 3.6rem;
+  }
+}
+
+@container hero (max-width: 22.6rem) {
+  .hero-center-logo {
+    flex-shrink: 1;
+    min-width: 6rem;
+  }
 }
 
 /* ---------- Cabeçalho "Agenda do time" (Chamada) ---------- */
