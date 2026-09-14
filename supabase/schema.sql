@@ -202,6 +202,13 @@ begin
     raise exception 'Pontos disponíveis não podem aumentar sozinhos.';
   end if;
 
+  -- Sem isso, dava pra mandar skill_points_available bem negativo (ex.: via
+  -- devtools, chamando a API direto) e "financiar" um monte de pontos de
+  -- atributo com um saldo que nunca existiu de verdade.
+  if new.skill_points_available < 0 then
+    raise exception 'Pontos disponíveis não podem ficar negativos.';
+  end if;
+
   attribute_delta :=
     (coalesce((new.attributes ->> 'pace')::int, 0) - coalesce((old.attributes ->> 'pace')::int, 0)) +
     (coalesce((new.attributes ->> 'shooting')::int, 0) - coalesce((old.attributes ->> 'shooting')::int, 0)) +
@@ -212,6 +219,22 @@ begin
 
   if attribute_delta <> points_spent then
     raise exception 'A distribuição de pontos não bate com os pontos disponíveis.';
+  end if;
+
+  -- Mesma ideia: a conta acima só garante que o total bate, não que cada
+  -- atributo ficou dentro da faixa que a cartinha usa (40 a 120). Sem essa
+  -- trava, dava pra concentrar tudo num atributo só e passar de 120.
+  if coalesce((new.attributes ->> 'pace')::int, 40) not between 40 and 120
+     or coalesce((new.attributes ->> 'shooting')::int, 40) not between 40 and 120
+     or coalesce((new.attributes ->> 'passing')::int, 40) not between 40 and 120
+     or coalesce((new.attributes ->> 'dribbling')::int, 40) not between 40 and 120
+     or coalesce((new.attributes ->> 'defending')::int, 40) not between 40 and 120
+     or coalesce((new.attributes ->> 'physical')::int, 40) not between 40 and 120 then
+    raise exception 'Atributo fora da faixa permitida (40 a 120).';
+  end if;
+
+  if new.jersey_number is not null and new.jersey_number not between 0 and 99 then
+    raise exception 'Número da camisa precisa estar entre 0 e 99.';
   end if;
 
   return new;
