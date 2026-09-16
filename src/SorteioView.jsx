@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from './lib/supabaseClient'
 import { formatMatchDate, formatTime } from './lib/matchDate'
 import { MIN_TEAM_SIZE, shuffleLineup } from './lib/teamDraw'
-import { shareToWhatsApp } from './lib/share'
+import { shareElementAsImage } from './lib/share'
 import TeamFormation from './TeamFormation'
 import { IconShuffle, IconTrash, IconClock, IconShare } from './icons'
 import PlayerPreviewView from './PlayerPreviewView'
@@ -18,6 +18,8 @@ export default function SorteioView({ players, isAdmin }) {
   const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState(null)
   const [selectedPlayer, setSelectedPlayer] = useState(null)
+  const [sharing, setSharing] = useState(false)
+  const teamsResultRef = useRef(null)
 
   // Não olha pra "hoje": pega sempre o sorteio mais recente que já
   // aconteceu (de qualquer sábado) e mantém ele fixo na tela a semana
@@ -153,27 +155,24 @@ export default function SorteioView({ players, isAdmin }) {
     )
   }
 
-  function handleShare() {
-    if (!currentDraw) return
+  async function handleShare() {
+    if (!currentDraw || !teamsResultRef.current) return
 
-    const reserveA = currentDraw.teams.reserveA ?? currentDraw.teams.reserve ?? []
-    const reserveB = currentDraw.teams.reserveB ?? []
-
-    const lines = [
-      `⚽ Escalação${matchDate ? ` — ${formatMatchDate(matchDate)}` : ''}`,
-      '',
-      `🟠 Time Laranja`,
-      ...currentDraw.teams.A.map((id) => `- ${playerName(id)}`),
-    ]
-    if (reserveA.length > 0) {
-      lines.push('Reservas:', ...reserveA.map((id) => `- ${playerName(id)}`))
+    setSharing(true)
+    setStatus(null)
+    try {
+      await shareElementAsImage(teamsResultRef.current, {
+        fileName: `escalacao${matchDate ? `-${matchDate}` : ''}.png`,
+        title: 'Escalação',
+        text: `⚽ Escalação${matchDate ? ` — ${formatMatchDate(matchDate)}` : ''}`,
+      })
+    } catch (error) {
+      if (error?.name !== 'AbortError') {
+        setStatus({ type: 'error', message: `Erro ao gerar imagem: ${error.message}` })
+      }
+    } finally {
+      setSharing(false)
     }
-    lines.push('', `🟢 Time Verde`, ...currentDraw.teams.B.map((id) => `- ${playerName(id)}`))
-    if (reserveB.length > 0) {
-      lines.push('Reservas:', ...reserveB.map((id) => `- ${playerName(id)}`))
-    }
-
-    shareToWhatsApp(lines.join('\n'))
   }
 
   return (
@@ -205,8 +204,9 @@ export default function SorteioView({ players, isAdmin }) {
                 type="button"
                 className="share-button"
                 onClick={handleShare}
-                aria-label="Compartilhar escalação no WhatsApp"
-                title="Compartilhar escalação no WhatsApp"
+                disabled={sharing}
+                aria-label="Compartilhar escalação como imagem"
+                title="Compartilhar escalação como imagem"
               >
                 <IconShare size={17} />
               </button>
@@ -228,7 +228,7 @@ export default function SorteioView({ players, isAdmin }) {
           {status && <p className={`status-message status-${status.type}`}>{status.message}</p>}
 
           {currentDraw && (
-            <div className="teams-result">
+            <div className="teams-result" ref={teamsResultRef}>
               <TeamFormation
                 label="Time Laranja"
                 variant="orange"

@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { supabase } from './lib/supabaseClient'
 import PlayerShieldCard from './PlayerShieldCard'
 import { ATTRIBUTE_LABELS, ATTRIBUTE_ORDER, computeOverall } from './lib/playerAttributes'
 import { getTierIndex, getTierByIndex, getRarity } from './lib/rarity'
 import { drawSkillOptions } from './lib/skills'
 import { getPositionById } from './lib/positions'
-import { shareToWhatsApp } from './lib/share'
+import { shareElementAsImage } from './lib/share'
 import { IconCard, IconChevronLeft, IconShare } from './icons'
 
 const PLAYER_SELECT_COLUMNS =
@@ -16,6 +16,8 @@ export default function PlayerCardView({ player, onPlayerUpdated, onBack }) {
   const [draftPoints, setDraftPoints] = useState(player.skill_points_available)
   const [saving, setSaving] = useState(false)
   const [status, setStatus] = useState(null)
+  const [sharing, setSharing] = useState(false)
+  const shieldCardRef = useRef(null)
   // Quando uma distribuição de pontos faz o jogador pular de tier, guardamos
   // aqui os pares de habilidade sorteados até ele escolher uma de cada — só
   // depois disso é que a gente realmente salva no banco.
@@ -26,18 +28,27 @@ export default function PlayerCardView({ player, onPlayerUpdated, onBack }) {
   const isChoosingSkills = pendingUnlocks !== null
   const positionLabel = getPositionById(player.position)?.label ?? 'Não definida'
 
-  function handleShare() {
+  async function handleShare() {
+    if (!shieldCardRef.current) return
+
     const overall = computeOverall(draftAttributes)
     const tier = getRarity(overall)
-    const lines = [
-      `⚽ Minha cartinha — Futsal Kings`,
-      `${player.name} · Nº ${player.jersey_number ?? '-'}`,
-      `Overall ${overall} · ${tier.name}`,
-      `Posição: ${positionLabel}`,
-      '',
-      ...ATTRIBUTE_ORDER.map((attr) => `${ATTRIBUTE_LABELS[attr]}: ${draftAttributes[attr]}`),
-    ]
-    shareToWhatsApp(lines.join('\n'))
+
+    setSharing(true)
+    setStatus(null)
+    try {
+      await shareElementAsImage(shieldCardRef.current, {
+        fileName: `cartinha-${player.name}.png`,
+        title: 'Minha cartinha',
+        text: `⚽ ${player.name} · Nº ${player.jersey_number ?? '-'} · Overall ${overall} · ${tier.name}`,
+      })
+    } catch (error) {
+      if (error?.name !== 'AbortError') {
+        setStatus({ type: 'error', message: `Erro ao gerar imagem: ${error.message}` })
+      }
+    } finally {
+      setSharing(false)
+    }
   }
 
   function increment(attr) {
@@ -141,21 +152,24 @@ export default function PlayerCardView({ player, onPlayerUpdated, onBack }) {
           type="button"
           className="share-button card-share-button"
           onClick={handleShare}
-          aria-label="Compartilhar cartinha no WhatsApp"
-          title="Compartilhar cartinha no WhatsApp"
+          disabled={sharing}
+          aria-label="Compartilhar cartinha como imagem"
+          title="Compartilhar cartinha como imagem"
         >
           <IconShare size={17} />
         </button>
       </div>
 
-      <PlayerShieldCard
-        name={player.name}
-        jerseyNumber={player.jersey_number}
-        attributes={draftAttributes}
-        unlockedSkills={player.unlocked_skills}
-        position={player.position}
-        size="full"
-      />
+      <div ref={shieldCardRef}>
+        <PlayerShieldCard
+          name={player.name}
+          jerseyNumber={player.jersey_number}
+          attributes={draftAttributes}
+          unlockedSkills={player.unlocked_skills}
+          position={player.position}
+          size="full"
+        />
+      </div>
 
       <div className="position-picker">
         <span className="position-picker-label">Posição</span>
