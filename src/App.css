@@ -410,6 +410,25 @@ body {
   transform: translateX(1.1rem);
 }
 
+.match-status-led {
+  flex-shrink: 0;
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff9d9d, #d61f1f 55%, #6b0d0d 100%);
+  box-shadow:
+    0 0 5px 1px rgba(214, 31, 31, 0.65),
+    inset 0 0 2px rgba(0, 0, 0, 0.45);
+}
+
+.match-status-led.is-on {
+  background: radial-gradient(circle at 35% 30%, #b6ffb8, #22c93c 55%, #0b6e1a 100%);
+  box-shadow:
+    0 0 6px 2px rgba(34, 201, 60, 0.75),
+    0 0 12px 4px rgba(34, 201, 60, 0.35),
+    inset 0 0 2px rgba(0, 0, 0, 0.35);
+}
+
 .offline-banner {
   margin: 0;
   padding: 0.65rem 1.5rem;

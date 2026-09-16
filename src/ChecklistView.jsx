@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase, isSupabaseConfigured } from './lib/supabaseClient'
-import { todayISODate, formatMatchDate, upcomingSaturdays } from './lib/matchDate'
+import { todayISODate, formatMatchDate, upcomingSaturdays, isSaturday } from './lib/matchDate'
 import { createTeams, MIN_TEAM_SIZE } from './lib/teamDraw'
 import { getAttendanceBalance, getAttendanceTier } from './lib/attendanceTier'
 import Hero from './Hero'
@@ -44,6 +44,8 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
   const [matchConfirmed, setMatchConfirmed] = useState(false)
   const matchDate = todayISODate()
   const saturdayDates = upcomingSaturdays(1)
+  const isMatchDaySaturday = isSaturday(matchDate)
+  const canTakeAttendance = isAdmin && isMatchDaySaturday
 
   useEffect(() => {
     async function loadSchedule() {
@@ -160,7 +162,7 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
   }, [matchDate])
 
   function toggle(playerId) {
-    if (!isAdmin) return
+    if (!canTakeAttendance) return
 
     setPresent((prev) => {
       const next = new Set(prev)
@@ -176,6 +178,11 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
   async function handleSave() {
     if (!isAdmin) {
       setStatus({ type: 'error', message: 'Somente administradores podem salvar a chamada.' })
+      return
+    }
+
+    if (!isMatchDaySaturday) {
+      setStatus({ type: 'error', message: 'A chamada só pode ser feita aos sábados.' })
       return
     }
 
@@ -513,16 +520,25 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
                     </span>
                   ) : null}
                 </div>
-                <button
-                  type="button"
-                  className={`match-status-toggle ${isConfirmed ? 'is-on' : 'is-off'}`}
-                  onClick={() => toggleMatchConfirmation(date, isConfirmed)}
-                  disabled={!isAdmin || scheduleLoading}
-                  aria-label={scheduleLoading ? 'Consultando…' : isConfirmed ? 'Futsal confirmado' : 'Futsal ainda não confirmado'}
-                  title={scheduleLoading ? 'Consultando…' : isConfirmed ? 'Futsal confirmado' : 'Futsal ainda não confirmado'}
-                >
-                  <span className="match-status-knob" aria-hidden="true" />
-                </button>
+                {isAdmin ? (
+                  <button
+                    type="button"
+                    className={`match-status-toggle ${isConfirmed ? 'is-on' : 'is-off'}`}
+                    onClick={() => toggleMatchConfirmation(date, isConfirmed)}
+                    disabled={scheduleLoading}
+                    aria-label={scheduleLoading ? 'Consultando…' : isConfirmed ? 'Futsal confirmado' : 'Futsal ainda não confirmado'}
+                    title={scheduleLoading ? 'Consultando…' : isConfirmed ? 'Futsal confirmado' : 'Futsal ainda não confirmado'}
+                  >
+                    <span className="match-status-knob" aria-hidden="true" />
+                  </button>
+                ) : (
+                  <span
+                    className={`match-status-led ${isConfirmed ? 'is-on' : 'is-off'}`}
+                    role="status"
+                    aria-label={scheduleLoading ? 'Consultando…' : isConfirmed ? 'Futsal confirmado' : 'Futsal ainda não confirmado'}
+                    title={scheduleLoading ? 'Consultando…' : isConfirmed ? 'Futsal confirmado' : 'Futsal ainda não confirmado'}
+                  />
+                )}
               </div>
             )
           })}
@@ -530,11 +546,18 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
       </section>
 
       <main className="roster">
-        {!isAdmin && (
+        {!isMatchDaySaturday ? (
           <p className="attendance-admin-notice">
             <IconAlertCircle size={20} />
-            <span>A chamada só pode ser alterada e salva por um administrador.</span>
+            <span>A chamada só pode ser feita aos sábados.</span>
           </p>
+        ) : (
+          !isAdmin && (
+            <p className="attendance-admin-notice">
+              <IconAlertCircle size={20} />
+              <span>A chamada só pode ser alterada e salva por um administrador.</span>
+            </p>
+          )
         )}
         {players.length === 0 ? (
           <p className="roster-empty">Nenhum jogador cadastrado ainda. Vá na aba "Elenco" pra cadastrar.</p>
@@ -545,7 +568,7 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
               return (
                 <li
                   key={player.id}
-                  className={`roster-row ${isPresent ? 'is-present' : ''} ${!isAdmin ? 'is-read-only' : ''}`}
+                  className={`roster-row ${isPresent ? 'is-present' : ''} ${!canTakeAttendance ? 'is-read-only' : ''}`}
                   onClick={() => toggle(player.id)}
                 >
                   <span className="jersey-badge">{player.jersey_number ?? '-'}</span>
@@ -561,7 +584,7 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
         )}
       </main>
 
-      {isAdmin && (
+      {canTakeAttendance && (
         <footer className="save-bar">
           {status && (
             <p className={`status-message status-${status.type}`}>

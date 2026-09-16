@@ -18,6 +18,10 @@ export function upcomingSaturdays(count = 6) {
   })
 }
 
+export function isSaturday(isoDate) {
+  return new Date(`${isoDate}T00:00:00`).getDay() === 6
+}
+
 export function formatMatchDate(isoDate) {
   const date = new Date(`${isoDate}T00:00:00`)
   return date.toLocaleDateString('pt-BR', {
