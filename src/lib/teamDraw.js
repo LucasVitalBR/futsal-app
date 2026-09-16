@@ -23,3 +23,20 @@ export function createTeams(playerIds) {
     reserveB: reserves.filter((_playerId, index) => index % 2 === 1),
   }
 }
+
+// Mistura, só dentro de um time (A ou B), quem fica titular e quem fica na
+// reserva — sem mexer no outro time nem sortear tudo de novo.
+export function shuffleLineup(teams, side) {
+  const starterKey = side
+  const reserveKey = side === 'A' ? 'reserveA' : 'reserveB'
+  const startersCount = (teams[starterKey] ?? []).length
+  const pool = shuffle([...(teams[starterKey] ?? []), ...(teams[reserveKey] ?? [])])
+
+  const nextTeams = {
+    ...teams,
+    [starterKey]: pool.slice(0, startersCount),
+    [reserveKey]: pool.slice(startersCount),
+  }
+  nextTeams.reserve = [...(nextTeams.reserveA ?? []), ...(nextTeams.reserveB ?? [])]
+  return nextTeams
+}

@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { supabase } from './lib/supabaseClient'
 import PlayerShieldCard from './PlayerShieldCard'
 import { ATTRIBUTE_LABELS, ATTRIBUTE_ORDER, computeOverall } from './lib/playerAttributes'
-import { getTierIndex, getTierByIndex } from './lib/rarity'
+import { getTierIndex, getTierByIndex, getRarity } from './lib/rarity'
 import { drawSkillOptions } from './lib/skills'
 import { getPositionById } from './lib/positions'
-import { IconCard, IconChevronLeft } from './icons'
+import { shareToWhatsApp } from './lib/share'
+import { IconCard, IconChevronLeft, IconShare } from './icons'
 
 const PLAYER_SELECT_COLUMNS =
   'id, name, jersey_number, total_points, skill_points_available, attributes, is_admin, user_id, position, highest_tier_reached, unlocked_skills'
@@ -24,6 +25,20 @@ export default function PlayerCardView({ player, onPlayerUpdated, onBack }) {
   const hasChanges = draftPoints !== player.skill_points_available
   const isChoosingSkills = pendingUnlocks !== null
   const positionLabel = getPositionById(player.position)?.label ?? 'Não definida'
+
+  function handleShare() {
+    const overall = computeOverall(draftAttributes)
+    const tier = getRarity(overall)
+    const lines = [
+      `⚽ Minha cartinha — Futsal Kings`,
+      `${player.name} · Nº ${player.jersey_number ?? '-'}`,
+      `Overall ${overall} · ${tier.name}`,
+      `Posição: ${positionLabel}`,
+      '',
+      ...ATTRIBUTE_ORDER.map((attr) => `${ATTRIBUTE_LABELS[attr]}: ${draftAttributes[attr]}`),
+    ]
+    shareToWhatsApp(lines.join('\n'))
+  }
 
   function increment(attr) {
     if (isChoosingSkills || draftPoints <= 0 || draftAttributes[attr] >= 120) return
@@ -122,6 +137,15 @@ export default function PlayerCardView({ player, onPlayerUpdated, onBack }) {
         )}
         <IconCard size={18} />
         <span>Cartinha</span>
+        <button
+          type="button"
+          className="share-button card-share-button"
+          onClick={handleShare}
+          aria-label="Compartilhar cartinha no WhatsApp"
+          title="Compartilhar cartinha no WhatsApp"
+        >
+          <IconShare size={17} />
+        </button>
       </div>
 
       <PlayerShieldCard

@@ -138,6 +138,17 @@ export function IconClock({ size = 16 }) {
   )
 }
 
+export function IconShare({ size = 18 }) {
+  return (
+    <svg width={size} height={size} {...base()}>
+      <circle cx="18" cy="5.5" r="2.5" />
+      <circle cx="6" cy="12" r="2.5" />
+      <circle cx="18" cy="18.5" r="2.5" />
+      <path d="M8.2 10.7l7.6-4.4M8.2 13.3l7.6 4.4" />
+    </svg>
+  )
+}
+
 export function IconShirt({ size = 18, className = '' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true">

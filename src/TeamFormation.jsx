@@ -1,6 +1,6 @@
 import PlayerShieldCard from './PlayerShieldCard'
 import { computeOverall } from './lib/playerAttributes'
-import { IconShirt } from './icons'
+import { IconShirt, IconShuffle } from './icons'
 
 // Linhas de baixo (defesa) pra cima (ataque), por tamanho de time.
 // Como não guardamos a posição de cada jogador, isso é só uma organização
@@ -21,7 +21,7 @@ function averageOverall(ids, players) {
   return Math.round(total / ids.length)
 }
 
-export default function TeamFormation({ label, variant, ids, players, onPlayerSelect }) {
+export default function TeamFormation({ label, variant, ids, players, onPlayerSelect, onMixLineup }) {
   const rows = ROW_LAYOUTS[ids.length] ?? [ids.length]
   let cursor = 0
   const rowChunks = rows.map((count) => {
@@ -34,6 +34,17 @@ export default function TeamFormation({ label, variant, ids, players, onPlayerSe
     <div className={`pitch-panel pitch-panel-${variant}`}>
       <div className="team-panel-header">
         <span className="team-panel-title">
+          {onMixLineup && (
+            <button
+              type="button"
+              className="team-mix-button"
+              onClick={onMixLineup}
+              aria-label={`Misturar titulares e reservas do ${label}`}
+              title={`Misturar titulares e reservas do ${label}`}
+            >
+              <IconShuffle size={15} />
+            </button>
+          )}
           <IconShirt size={16} className="team-panel-shirt" />
           {label}
         </span>

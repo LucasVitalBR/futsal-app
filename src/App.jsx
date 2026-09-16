@@ -106,7 +106,7 @@ export default function App() {
         ) : tab === 'elenco' ? (
           <PlayersView players={players} setPlayers={setPlayers} isAdmin={isAdmin} />
         ) : tab === 'sorteio' ? (
-          <SorteioView players={players} />
+          <SorteioView players={players} isAdmin={isAdmin} />
         ) : tab === 'cartinha' ? (
           currentPlayer ? (
             <PlayerCardView player={currentPlayer} onPlayerUpdated={handlePlayerUpdated} onBack={() => setTab('perfil')} />

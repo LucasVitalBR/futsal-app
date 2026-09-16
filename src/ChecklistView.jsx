@@ -387,13 +387,27 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
       let drawMessage = ''
 
       if (savedPlayerIds.length >= MIN_TEAM_SIZE * 2) {
-        const { error: drawError } = await supabase.from('team_draws').insert({
-          match_id: match.id,
-          teams: createTeams(savedPlayerIds),
-        })
+        // Só sorteia se esse sábado ainda não tem sorteio — depois de
+        // sorteado, fica fixo (mesmo que a chamada seja salva de novo) até
+        // o próximo sábado, que é uma partida (match_id) nova.
+        const { data: existingDraw, error: existingDrawError } = await supabase
+          .from('team_draws')
+          .select('id')
+          .eq('match_id', match.id)
+          .limit(1)
+          .maybeSingle()
 
-        if (drawError) throw drawError
-        drawMessage = ' Os times foram sorteados automaticamente.'
+        if (existingDrawError) throw existingDrawError
+
+        if (!existingDraw) {
+          const { error: drawError } = await supabase.from('team_draws').insert({
+            match_id: match.id,
+            teams: createTeams(savedPlayerIds),
+          })
+
+          if (drawError) throw drawError
+          drawMessage = ' Os times foram sorteados automaticamente.'
+        }
       }
 
       setStatus({

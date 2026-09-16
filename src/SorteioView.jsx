@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './lib/supabaseClient'
 import { formatMatchDate, formatTime } from './lib/matchDate'
-import { MIN_TEAM_SIZE } from './lib/teamDraw'
+import { MIN_TEAM_SIZE, shuffleLineup } from './lib/teamDraw'
+import { shareToWhatsApp } from './lib/share'
 import TeamFormation from './TeamFormation'
-import { IconShuffle, IconTrash, IconClock } from './icons'
+import { IconShuffle, IconTrash, IconClock, IconShare } from './icons'
 import PlayerPreviewView from './PlayerPreviewView'
 import Hero from './Hero'
 
 const DEFAULT_TEAM_SIZE = 5
 
-export default function SorteioView({ players }) {
+export default function SorteioView({ players, isAdmin }) {
   const [confirmedIds, setConfirmedIds] = useState([])
   const [matchId, setMatchId] = useState(null)
   const [matchDate, setMatchDate] = useState(null)
@@ -136,6 +137,45 @@ export default function SorteioView({ players }) {
     setStatus({ type: 'success', message: 'Histórico de sorteios apagado.' })
   }
 
+  async function handleMixLineup(side) {
+    if (!isAdmin || !currentDraw) return
+
+    const nextTeams = shuffleLineup(currentDraw.teams, side)
+    const { error } = await supabase.from('team_draws').update({ teams: nextTeams }).eq('id', currentDraw.id)
+
+    if (error) {
+      setStatus({ type: 'error', message: `Erro ao misturar: ${error.message}` })
+      return
+    }
+
+    setDraws((previous) =>
+      previous.map((draw) => (draw.id === currentDraw.id ? { ...draw, teams: nextTeams } : draw)),
+    )
+  }
+
+  function handleShare() {
+    if (!currentDraw) return
+
+    const reserveA = currentDraw.teams.reserveA ?? currentDraw.teams.reserve ?? []
+    const reserveB = currentDraw.teams.reserveB ?? []
+
+    const lines = [
+      `⚽ Escalação${matchDate ? ` — ${formatMatchDate(matchDate)}` : ''}`,
+      '',
+      `🟠 Time Laranja`,
+      ...currentDraw.teams.A.map((id) => `- ${playerName(id)}`),
+    ]
+    if (reserveA.length > 0) {
+      lines.push('Reservas:', ...reserveA.map((id) => `- ${playerName(id)}`))
+    }
+    lines.push('', `🟢 Time Verde`, ...currentDraw.teams.B.map((id) => `- ${playerName(id)}`))
+    if (reserveB.length > 0) {
+      lines.push('Reservas:', ...reserveB.map((id) => `- ${playerName(id)}`))
+    }
+
+    shareToWhatsApp(lines.join('\n'))
+  }
+
   return (
     <>
       <Hero />
@@ -157,9 +197,20 @@ export default function SorteioView({ players }) {
             </div>
           </div>
           {currentDraw && !selectedPlayer && (
-            <span className="section-time">
-              <IconClock size={15} /> Sorteado às {formatTime(currentDraw.created_at)}
-            </span>
+            <div className="section-header-actions">
+              <span className="section-time">
+                <IconClock size={15} /> Sorteado às {formatTime(currentDraw.created_at)}
+              </span>
+              <button
+                type="button"
+                className="share-button"
+                onClick={handleShare}
+                aria-label="Compartilhar escalação no WhatsApp"
+                title="Compartilhar escalação no WhatsApp"
+              >
+                <IconShare size={17} />
+              </button>
+            </div>
           )}
         </div>
 
@@ -178,8 +229,22 @@ export default function SorteioView({ players }) {
 
           {currentDraw && (
             <div className="teams-result">
-              <TeamFormation label="Time Laranja" variant="orange" ids={currentDraw.teams.A} players={players} onPlayerSelect={setSelectedPlayer} />
-              <TeamFormation label="Time Verde" variant="green" ids={currentDraw.teams.B} players={players} onPlayerSelect={setSelectedPlayer} />
+              <TeamFormation
+                label="Time Laranja"
+                variant="orange"
+                ids={currentDraw.teams.A}
+                players={players}
+                onPlayerSelect={setSelectedPlayer}
+                onMixLineup={isAdmin ? () => handleMixLineup('A') : undefined}
+              />
+              <TeamFormation
+                label="Time Verde"
+                variant="green"
+                ids={currentDraw.teams.B}
+                players={players}
+                onPlayerSelect={setSelectedPlayer}
+                onMixLineup={isAdmin ? () => handleMixLineup('B') : undefined}
+              />
 
               {renderReserves(currentDraw.teams)}
             </div>
