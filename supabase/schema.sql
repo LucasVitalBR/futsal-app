@@ -34,9 +34,10 @@ create table if not exists players (
 drop index if exists players_jersey_number_unique;
 create unique index players_jersey_number_unique on players (jersey_number) where jersey_number is not null;
 
--- Posição escolhida na cartinha. Usada só pra pesar o sorteio de habilidades
--- desbloqueadas por tier (ver mais abaixo); não trava o jogador de tirar
--- habilidade de fora da posição dele, só deixa menos provável.
+-- Posição escolhida no cadastro (ou depois, no perfil). Usada só pra pesar
+-- o sorteio de habilidades desbloqueadas por tier (ver mais abaixo); não
+-- trava o jogador de tirar habilidade de fora da posição dele, só deixa
+-- menos provável.
 alter table players add column if not exists position text;
 update players set position = null where position = 'linha'; -- valor antigo, de antes das 5 posições
 alter table players drop constraint if exists players_position_check;
@@ -129,6 +130,7 @@ create or replace function public.handle_new_user()
 returns trigger as $$
 declare
   requested_jersey int;
+  requested_position text;
 begin
   begin
     requested_jersey := nullif(new.raw_user_meta_data ->> 'jersey_number', '')::int;
@@ -140,19 +142,26 @@ begin
     requested_jersey := null;
   end if;
 
+  requested_position := nullif(new.raw_user_meta_data ->> 'position', '');
+  if requested_position is not null
+     and requested_position not in ('goleiro', 'fixo', 'ala_direita', 'ala_esquerda', 'pivo') then
+    requested_position := null;
+  end if;
+
   begin
-    insert into public.players (user_id, name, jersey_number)
+    insert into public.players (user_id, name, jersey_number, position)
     values (
       new.id,
       coalesce(new.raw_user_meta_data ->> 'full_name', 'Novo jogador'),
-      requested_jersey
+      requested_jersey,
+      requested_position
     );
   exception when unique_violation then
     -- Alguém ficou com esse número entre a checagem no app e o cadastro de
     -- verdade (corrida rara). Não deixa isso quebrar a criação da conta —
     -- cria sem número, e a pessoa escolhe outro depois no perfil.
-    insert into public.players (user_id, name, jersey_number)
-    values (new.id, coalesce(new.raw_user_meta_data ->> 'full_name', 'Novo jogador'), null);
+    insert into public.players (user_id, name, jersey_number, position)
+    values (new.id, coalesce(new.raw_user_meta_data ->> 'full_name', 'Novo jogador'), null, requested_position);
   end;
 
   return new;

@@ -1080,6 +1080,16 @@ body {
   opacity: 0.6;
 }
 
+.position-display {
+  margin: 0;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  background: var(--bg-panel);
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .skill-unlock-panel {
   margin: 1rem 0;
   padding: 1rem;

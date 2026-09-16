@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from './lib/supabaseClient'
+import { POSITIONS } from './lib/positions'
 import Hero from './Hero'
 
 export default function AuthView() {
@@ -8,6 +9,7 @@ export default function AuthView() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [jerseyNumber, setJerseyNumber] = useState('')
+  const [position, setPosition] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState(null)
 
@@ -47,6 +49,7 @@ export default function AuthView() {
             data: {
               full_name: name.trim() || 'Novo jogador',
               jersey_number: jerseyNumberValue,
+              position,
             },
           },
         })
@@ -100,6 +103,23 @@ export default function AuthView() {
                   onChange={(e) => setJerseyNumber(e.target.value)}
                   placeholder="Nº — dá pra escolher depois também"
                 />
+              </div>
+            )}
+            {mode === 'signup' && (
+              <div className="position-picker">
+                <span className="position-picker-label">Posição (opcional)</span>
+                <div className="position-picker-options">
+                  {POSITIONS.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      className={`position-option ${position === option.id ? 'is-selected' : ''}`}
+                      onClick={() => setPosition(position === option.id ? null : option.id)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
             <div className="form-row">

@@ -4,7 +4,7 @@ import PlayerShieldCard from './PlayerShieldCard'
 import { ATTRIBUTE_LABELS, ATTRIBUTE_ORDER, computeOverall } from './lib/playerAttributes'
 import { getTierIndex, getTierByIndex } from './lib/rarity'
 import { drawSkillOptions } from './lib/skills'
-import { POSITIONS } from './lib/positions'
+import { getPositionById } from './lib/positions'
 import { IconCard, IconChevronLeft } from './icons'
 
 const PLAYER_SELECT_COLUMNS =
@@ -13,7 +13,6 @@ const PLAYER_SELECT_COLUMNS =
 export default function PlayerCardView({ player, onPlayerUpdated, onBack }) {
   const [draftAttributes, setDraftAttributes] = useState(() => ({ ...player.attributes }))
   const [draftPoints, setDraftPoints] = useState(player.skill_points_available)
-  const [draftPosition, setDraftPosition] = useState(player.position ?? null)
   const [saving, setSaving] = useState(false)
   const [status, setStatus] = useState(null)
   // Quando uma distribuição de pontos faz o jogador pular de tier, guardamos
@@ -22,8 +21,9 @@ export default function PlayerCardView({ player, onPlayerUpdated, onBack }) {
   const [pendingUnlocks, setPendingUnlocks] = useState(null)
   const [chosenSkills, setChosenSkills] = useState({})
 
-  const hasChanges = draftPoints !== player.skill_points_available || draftPosition !== (player.position ?? null)
+  const hasChanges = draftPoints !== player.skill_points_available
   const isChoosingSkills = pendingUnlocks !== null
+  const positionLabel = getPositionById(player.position)?.label ?? 'Não definida'
 
   function increment(attr) {
     if (isChoosingSkills || draftPoints <= 0 || draftAttributes[attr] >= 120) return
@@ -44,7 +44,6 @@ export default function PlayerCardView({ player, onPlayerUpdated, onBack }) {
     const payload = {
       attributes: draftAttributes,
       skill_points_available: draftPoints,
-      position: draftPosition,
     }
     if (unlockedSkillsToAdd.length > 0) {
       payload.unlocked_skills = [...(player.unlocked_skills ?? []), ...unlockedSkillsToAdd]
@@ -85,7 +84,7 @@ export default function PlayerCardView({ player, onPlayerUpdated, onBack }) {
       const usedInThisBatch = []
       const unlocks = []
       for (let tierIndex = currentTierIndex + 1; tierIndex <= nextTierIndex; tierIndex++) {
-        const options = drawSkillOptions(draftPosition, [...alreadyOfferedIds, ...usedInThisBatch])
+        const options = drawSkillOptions(player.position, [...alreadyOfferedIds, ...usedInThisBatch])
         options.forEach((skill) => usedInThisBatch.push(skill.id))
         unlocks.push({ tierIndex, tierName: getTierByIndex(tierIndex).name, options })
       }
@@ -130,25 +129,13 @@ export default function PlayerCardView({ player, onPlayerUpdated, onBack }) {
         jerseyNumber={player.jersey_number}
         attributes={draftAttributes}
         unlockedSkills={player.unlocked_skills}
-        position={draftPosition}
+        position={player.position}
         size="full"
       />
 
       <div className="position-picker">
         <span className="position-picker-label">Posição</span>
-        <div className="position-picker-options">
-          {POSITIONS.map((position) => (
-            <button
-              key={position.id}
-              type="button"
-              className={`position-option ${draftPosition === position.id ? 'is-selected' : ''}`}
-              onClick={() => setDraftPosition(position.id)}
-              disabled={isChoosingSkills}
-            >
-              {position.label}
-            </button>
-          ))}
-        </div>
+        <p className="position-display">{positionLabel}</p>
       </div>
 
       <div className="attribute-list">

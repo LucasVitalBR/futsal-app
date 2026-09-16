@@ -3,6 +3,7 @@ import { supabase } from './lib/supabaseClient'
 import { computeOverall } from './lib/playerAttributes'
 import { getRarity } from './lib/rarity'
 import { getSkillById } from './lib/skills'
+import { POSITIONS } from './lib/positions'
 import { IconCard, IconLogout, IconChevronRight } from './icons'
 
 const PLAYER_SELECT_COLUMNS =
@@ -72,6 +73,30 @@ export default function ProfileView({ player, players = [], onNavigate, onPlayer
     setEditingJersey(false)
   }
 
+  const [savingPosition, setSavingPosition] = useState(false)
+  const [positionError, setPositionError] = useState(null)
+
+  async function handleSelectPosition(positionId) {
+    if (savingPosition || positionId === (player.position ?? null)) return
+
+    setPositionError(null)
+    setSavingPosition(true)
+    const { data, error } = await supabase
+      .from('players')
+      .update({ position: positionId })
+      .eq('id', player.id)
+      .select(PLAYER_SELECT_COLUMNS)
+      .single()
+    setSavingPosition(false)
+
+    if (error) {
+      setPositionError(`Erro ao salvar: ${error.message}`)
+      return
+    }
+
+    onPlayerUpdated?.(data)
+  }
+
   return (
     <div className="profile-view">
       <div className="profile-header">
@@ -127,6 +152,24 @@ export default function ProfileView({ player, players = [], onNavigate, onPlayer
           </button>
         )}
         {jerseyError && <p className="status-message status-error">{jerseyError}</p>}
+      </div>
+
+      <div className="position-picker">
+        <span className="position-picker-label">Posição</span>
+        <div className="position-picker-options">
+          {POSITIONS.map((position) => (
+            <button
+              key={position.id}
+              type="button"
+              className={`position-option ${(player.position ?? null) === position.id ? 'is-selected' : ''}`}
+              onClick={() => handleSelectPosition(position.id)}
+              disabled={savingPosition}
+            >
+              {position.label}
+            </button>
+          ))}
+        </div>
+        {positionError && <p className="status-message status-error">{positionError}</p>}
       </div>
 
       {equippedSkills.length > 0 && (
