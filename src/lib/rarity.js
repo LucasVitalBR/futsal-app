@@ -28,7 +28,7 @@ const TIERS = [
     image: habilityCard,
     text: '#f5e7a7',
     watermark: 'rgba(245, 231, 167, 0.35)',
-    halo: 'rgba(255, 255, 255, 0.7)',
+    halo: 'rgba(0, 0, 0, 0.75)',
   },
   {
     max: 80,
