@@ -206,7 +206,6 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
         .single()
 
       if (matchError) throw matchError
-      setScheduledMatchDates((previous) => new Set(previous).add(matchDate))
 
       // Descobre quem já tinha sido marcado presente nesta partida,
       // pra não pontuar duas vezes se o usuário salvar de novo.
