@@ -249,14 +249,12 @@ export default function ChecklistView({ players, setPlayers, isAdmin }) {
       }, {})
 
       const existingByPlayer = new Map(existing.map((row) => [row.player_id, row]))
-      const newlyPresentIds = [...present].filter((id) => {
-        const savedAttendance = existingByPlayer.get(id)
-        return (
-          savedAttendance?.present !== true ||
-          savedAttendance?.points_awarded == null ||
-          savedAttendance.points_awarded === 0
-        )
-      })
+      // Só conta como "presença nova" (e só aí ganha pontos) quem ainda não
+      // tinha sido salvo como presente nesta partida. Assim, salvar a
+      // chamada de novo no mesmo sábado nunca pontua o mesmo jogador duas
+      // vezes — não depende do valor de points_awarded, que podia falhar
+      // silenciosamente se essa coluna não existisse no banco.
+      const newlyPresentIds = [...present].filter((id) => existingByPlayer.get(id)?.present !== true)
       const newlyAbsentIds = players
         .filter((player) => !present.has(player.id) && !existingByPlayer.has(player.id))
         .map((player) => player.id)
